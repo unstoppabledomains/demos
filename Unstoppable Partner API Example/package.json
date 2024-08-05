@@ -1,0 +1,18 @@
+{
+  "name": "unstoppable-partner-api-example",
+  "version": "1.0.0",
+  "description": "This project is a demonstration of integrating with the Unstoppable Domains Partner API. It includes a Node.js server and a Create React App client.",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm run start:client\" \"npm run start:server\"",
+    "start:client": "npm start --prefix client",
+    "start:server": "npm start --prefix server",
+    "install:all": "npm install && npm install --prefix client && npm install --prefix server"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
