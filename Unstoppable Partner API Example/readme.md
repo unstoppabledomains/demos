@@ -12,7 +12,7 @@ Run the following command to install all dependencies for both the server and th
 `npm run install:all`
 
 ### 3. Request and Add Your Sandbox API Key
-Go to dashboard.auth.unstoppabledomains.com, sign up, create a Sandbox client and request a Sandbox API key.
+Go to the [Partner Dashboard](https://dashboard.auth.unstoppabledomains.com/auth), sign up, create a Sandbox client and request a Sandbox API key.
 Add your Sandbox API key to the `server.js` file in the `server` directories.
 
 #### For example:
