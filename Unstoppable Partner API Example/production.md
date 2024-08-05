@@ -13,15 +13,17 @@ This example features 2 endpoints from the API
 ### 1. Clone the Repository
 
 ### 2. Request and Add Your API Key
-Go to dashboard.auth.unstoppabledomains.com, sign up, create a client and request an API key. You can also create a Sandbox client and request an API key for testing
+Go to the [Partner Dashboard](https://dashboard.auth.unstoppabledomains.com/auth), sign up, create a client and request an API key. You can also create a Sandbox client and request an API key for testing
 Add your Sandbox API key to the `server.js` file in the `server` directory.
 
 ### 3. Configure your environment variables
 Example:
-`UNSTOPPABLE_SANDBOX_API_URL = "https://api.ud-sandbox.com/partner/v3"`
-`UNSTOPPABLE_PROD_API_URL = "https://api.unstoppabledomains.com/partner/v3/"`
-`UNSTOPPABLE_SANDBOX_API_KEY = "YOUR SANDBOX KEY" `
-`UNSTOPPABL_PROD_API_KEY = "YOUR PRODUCTION KEY" `
+```
+UNSTOPPABLE_SANDBOX_API_URL = "https://api.ud-sandbox.com/partner/v3"
+UNSTOPPABLE_PROD_API_URL = "https://api.unstoppabledomains.com/partner/v3/"
+UNSTOPPABLE_SANDBOX_API_KEY = "YOUR SANDBOX KEY" 
+UNSTOPPABL_PROD_API_KEY = "YOUR PRODUCTION KEY"
+```
 
 ### 4. Configure your backend routes
 Inside of `server.js` you'll see the following routes declared
@@ -110,7 +112,9 @@ Add these to your backend.
 We suggest 
 
 To get a list of domain suggestions based on search
-`const response = await axios.get(`http://localhost:3001/api/domains?query=${query}`);`
+```
+const response = await axios.get(`http://localhost:3001/api/domains?query=${query}`);
+```
 
 To register a selected domain
 ```
