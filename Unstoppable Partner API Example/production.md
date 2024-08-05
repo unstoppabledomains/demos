@@ -25,7 +25,8 @@ Example:
 
 ### 4. Configure your backend routes
 Inside of `server.js` you'll see the following routes declared
-```app.get('/api/domains', async (req, res) => {
+```
+  app.get('/api/domains', async (req, res) => {
   const query = req.query.query;
   try {
     const domains = await searchDomains(query);
