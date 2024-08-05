@@ -6,7 +6,7 @@ const app = express();
 const port = 3001;
 
 const UNSTOPPABLE_SANDBOX_API_URL = 'https://api.ud-sandbox.com/partner/v3';
-const UNSTOPPABLE_SANDBOX_API_KEY = 'wwdkk4tuacvg1z-voetgyoxp-un2zrckm8dcgp9fzt92p3r-';
+const UNSTOPPABLE_SANDBOX_API_KEY = 'PUT YOUR SANXBOX API KEY HERE';
 
 app.use(express.json());
 app.use(cors());
