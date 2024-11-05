@@ -13,11 +13,11 @@ Run the following command to install all dependencies for both the server and th
 
 ### 3. Request and Add Your Sandbox API Key
 Go to the [Partner Dashboard](https://dashboard.auth.unstoppabledomains.com/auth), sign up, create a Sandbox client and request a Sandbox API key.
-Add your Sandbox API key to the `server.js` file in the `server` directories.
+Add your Sandbox API key to the `.env` file in the `server` directory. Use `.env.example` to create your `.env` file.
 
 #### For example:
-in `server/server.js`
-`const UNSTOPPABLE_SANDBOX_API_KEY = 'PUT YOUR SANDBOX API KEY HERE';`
+in `server/.env`
+`API_KEY_VALUE = 'PUT YOUR SANDBOX API KEY HERE';`
 
 ### 4. Start the Project
 Run the following command to start both the server and the client concurrently:
