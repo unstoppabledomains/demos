@@ -2,11 +2,12 @@ const express = require('express');
 const axios = require('axios');
 const path = require('path');
 const cors = require('cors');
+require('dotenv').config()
 const app = express();
-const port = 3001;
 
-const UNSTOPPABLE_SANDBOX_API_URL = 'https://api.ud-sandbox.com/partner/v3';
-const UNSTOPPABLE_SANDBOX_API_KEY = 'PUT YOUR SANXBOX API KEY HERE';
+const port = process.env.PORT || 3001;
+const UNSTOPPABLE_SANDBOX_API_KEY = process.env.API_KEY_VALUE;
+const UNSTOPPABLE_SANDBOX_API_URL = process.env.API_URL;
 
 app.use(express.json());
 app.use(cors());

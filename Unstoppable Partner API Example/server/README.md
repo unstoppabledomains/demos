@@ -1,6 +1,6 @@
 In the project directory, you should:
 
-### Go into the server.js file and replace UNSTOPPABLE_SANDBOX_API_KEY with your Sandbox API key from dashboard.auth.unstoppabledomains.com
+### Go into the server Folder and update the .env API_KEY_VALUE with your Sandbox API key from dashboard.auth.unstoppabledomains.com. Use .env.example to create your .env
 
 ### `npm start` to start the server
 
