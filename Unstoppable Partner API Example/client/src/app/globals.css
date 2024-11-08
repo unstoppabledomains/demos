@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+@font-face {
+  font-family: "HelveticaNeue";
+  src: url("./fonts/HelveticaNeueLT97BlackCondensed.ttf");
+}
+
+@font-face {
+  font-family: "Inter";
+  src: url("./fonts/inter.woff2");
+}
+
+body {
+  background-color: #121212;
+}

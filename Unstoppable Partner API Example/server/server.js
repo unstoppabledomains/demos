@@ -29,9 +29,8 @@ app.get('/api/domains', async (req, res) => {
 
 app.post('/api/register', async (req, res) => {
   const domainId = req.body.domainId;
-  const walletAddress = req.body.wallet;
   try {
-    const register = await registerDomain(domainId, walletAddress);
+    const register = await registerDomain(domainId);
     if (register.error) {
       res.status(500).json(register);
     } else {
@@ -42,6 +41,35 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
+app.put('/api/transfer/:domain', async (req, res) => {
+  const domain = req.params.domain;
+  const walletAddress = req.body.wallet;
+  try {
+    const domainReturn = await transferDomain(domain, walletAddress);
+    if (domainReturn.error) {
+      res.status(500).json(register);
+    } else {
+      res.json(domainReturn);
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Error transferring domain', details: error.message });
+  }
+});
+
+app.delete('/api/return/:domain', async (req, res) => {
+  const domain = req.params.domain;
+  try {
+    const transfer = await returnDomain(domain);
+    if (transfer.error) {
+      res.status(500).json(transfer);
+    } else {
+      res.json(transfer);
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Error returning domain', details: error.message });
+  }
+});
+
 const searchDomains = async (domainName) => {
   try {
     const response = await axios.get(`${UNSTOPPABLE_SANDBOX_API_URL}/suggestions/domains?query=${domainName}`, {
@@ -49,30 +77,39 @@ const searchDomains = async (domainName) => {
         Authorization: 'Bearer ' + UNSTOPPABLE_SANDBOX_API_KEY
       }
     });
-    const data = response.data.items.map(item => ({
-      name: item.name,
-      price: {
-        usdCents: item.price.listPrice.usdCents
-      }
-    }));
+    const data = {
+      items: response.data.items.map(item => ({
+        name: item.name,
+        price: {
+          listPrice: {
+            usdCents: item.price.listPrice.usdCents
+          }
+        }
+      }))
+    }
     console.log(data);
     return data;
   } catch (error) {
-    console.error('Error fetching domains:', error);
-    throw new Error('Error fetching domains');
+    if (error.response) {
+      console.error('Server error:', error.response.data);
+      return { error: 'Server error', details: error.response.data };
+    } else if (error.request) {
+      console.error('No response received:', error.request);
+      return { error: 'No response received', details: error.request };
+    } else {
+      console.error('Error setting up request:', error.message);
+      return { error: 'Error setting up request', details: error.message };
+    }
   }
 };
 
-const registerDomain = async (domainId, walletAddress) => {
+const registerDomain = async (domainId) => {
   try {
     const response = await axios.post(
       `${UNSTOPPABLE_SANDBOX_API_URL}/domains?query=${domainId}`,
       JSON.stringify({
         name: domainId,
-        owner: {
-          type: 'EXTERNAL',
-          address: walletAddress
-        }
+        records: {}
       }),
       {
         headers: {
@@ -82,6 +119,68 @@ const registerDomain = async (domainId, walletAddress) => {
       }
     );
     console.log('Domain registered:', response.data);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      console.error('Server error:', error.response.data);
+      return { error: 'Server error', details: error.response.data };
+    } else if (error.request) {
+      console.error('No response received:', error.request);
+      return { error: 'No response received', details: error.request };
+    } else {
+      console.error('Error setting up request:', error.message);
+      return { error: 'Error setting up request', details: error.message };
+    }
+  }
+};
+
+const transferDomain = async (domainId, walletAddress) => {
+  try {
+    const response = await axios.put(
+      `${UNSTOPPABLE_SANDBOX_API_URL}/domains/${domainId}`,
+      JSON.stringify({
+        name: domainId,
+        owner: {
+          type: 'EXTERNAL',
+          address: walletAddress
+        },
+        records: {}
+      }),
+      {
+        headers: {
+          Authorization: 'Bearer ' + UNSTOPPABLE_SANDBOX_API_KEY,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    console.log('Domain transferred:', response.data);
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      console.error('Server error:', error.response.data);
+      return { error: 'Server error', details: error.response.data };
+    } else if (error.request) {
+      console.error('No response received:', error.request);
+      return { error: 'No response received', details: error.request };
+    } else {
+      console.error('Error setting up request:', error.message);
+      return { error: 'Error setting up request', details: error.message };
+    }
+  }
+};
+
+const returnDomain = async (domainId) => {
+  try {
+    const response = await axios.delete(
+      `${UNSTOPPABLE_SANDBOX_API_URL}/domains/${domainId}`,
+      {
+        headers: {
+          Authorization: 'Bearer ' + UNSTOPPABLE_SANDBOX_API_KEY,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    console.log('Domain returned:', response.data);
     return response.data;
   } catch (error) {
     if (error.response) {
