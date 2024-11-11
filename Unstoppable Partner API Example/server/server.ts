@@ -1,35 +1,38 @@
-const express = require('express');
-const axios = require('axios');
-const path = require('path');
-const cors = require('cors');
-const { jwtVerify, createRemoteJWKSet } = require('jose');
-require('dotenv').config()
-const app = express();
+import express, { Express, Request, Response } from 'express';
+import axios from 'axios';
+import path from 'path';
+import cors from 'cors';
+import { jwtVerify, createRemoteJWKSet } from 'jose';
+//import { Low, JSONFile } from 'lowdb';
+import dotenv from 'dotenv';
 
+dotenv.config();
+
+const app: Express = express();
 const port = process.env.PORT || 3001;
-const UNSTOPPABLE_SANDBOX_API_KEY = process.env.API_KEY_VALUE;
-const UNSTOPPABLE_SANDBOX_API_URL = process.env.API_URL;
+const UNSTOPPABLE_SANDBOX_API_KEY = process.env.API_KEY_VALUE as string;
+const UNSTOPPABLE_SANDBOX_API_URL = process.env.API_URL as string;
 
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'build')));
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+app.get('/', (req: Request, res: Response) => {
+  res.status(500).json('Server is running');
 });
 
-app.get('/api/domains', async (req, res) => {
-  const query = req.query.query;
+app.get('/api/domains', async (req: Request, res: Response) => {
+  const query = req.query.query as string;
   try {
     const domains = await searchDomains(query);
     res.json(domains);
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: 'Error fetching domains', details: error.message });
   }
 });
 
-app.post('/api/register', async (req, res) => {
-  const domainId = req.body.domainId;
+app.post('/api/register', async (req: Request, res: Response) => {
+  const domainId = req.body.domainId as string;
   try {
     const register = await registerDomain(domainId);
     if (register.error) {
@@ -37,56 +40,56 @@ app.post('/api/register', async (req, res) => {
     } else {
       res.json(register);
     }
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: 'Error registering domain', details: error.message });
   }
 });
 
-app.post('/api/auth/verify', async (req, res) => {
+app.post('/api/auth/verify', async (req: Request, res: Response) => {
   const auth = req.body.auth;
-  const clientId = req.body.clientId;
+  const clientId = req.body.clientId as string;
   try {
     const verify = await verifyLogin(auth, clientId);
     if (verify.error) {
       res.status(500).json(verify);
     } else {
-      res.json(verify);
+      res.json(verify.valid);
     }
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: 'Error verifying login', details: error.message });
   }
 });
 
-app.put('/api/transfer/:domain', async (req, res) => {
+app.put('/api/transfer/:domain', async (req: Request, res: Response) => {
   const domain = req.params.domain;
   const walletAddress = req.body.wallet;
   try {
-    const domainReturn = await transferDomain(domain, walletAddress);
-    if (domainReturn.error) {
-      res.status(500).json(register);
+    const domainTransfer = await transferDomain(domain, walletAddress);
+    if (domainTransfer.error) {
+      res.status(500).json(domainTransfer);
     } else {
-      res.json(domainReturn);
+      res.json(domainTransfer);
     }
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: 'Error transferring domain', details: error.message });
   }
 });
 
-app.delete('/api/return/:domain', async (req, res) => {
+app.delete('/api/return/:domain', async (req: Request, res: Response) => {
   const domain = req.params.domain;
   try {
-    const transfer = await returnDomain(domain);
-    if (transfer.error) {
-      res.status(500).json(transfer);
+    const domainReturn = await returnDomain(domain);
+    if (domainReturn.error) {
+      res.status(500).json(domainReturn);
     } else {
-      res.json(transfer);
+      res.json(domainReturn);
     }
-  } catch (error) {
+  } catch (error: any) {
     res.status(500).json({ error: 'Error returning domain', details: error.message });
   }
 });
 
-const searchDomains = async (domainName) => {
+const searchDomains = async (domainName: string) => {
   try {
     const response = await axios.get(`${UNSTOPPABLE_SANDBOX_API_URL}/suggestions/domains?query=${domainName}`, {
       headers: {
@@ -94,7 +97,7 @@ const searchDomains = async (domainName) => {
       }
     });
     const data = {
-      items: response.data.items.map(item => ({
+      items: response.data.items.map((item: any) => ({
         name: item.name,
         price: {
           listPrice: {
@@ -105,7 +108,7 @@ const searchDomains = async (domainName) => {
     }
     console.log(data);
     return data;
-  } catch (error) {
+  } catch (error: any) {
     if (error.response) {
       console.error('Server error:', error.response.data);
       return { error: 'Server error', details: error.response.data };
@@ -119,7 +122,7 @@ const searchDomains = async (domainName) => {
   }
 };
 
-const registerDomain = async (domainId) => {
+const registerDomain = async (domainId: string) => {
   try {
     const response = await axios.post(
       `${UNSTOPPABLE_SANDBOX_API_URL}/domains?query=${domainId}`,
@@ -136,7 +139,7 @@ const registerDomain = async (domainId) => {
     );
     console.log('Domain registered:', response.data);
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     if (error.response) {
       console.error('Server error:', error.response.data);
       return { error: 'Server error', details: error.response.data };
@@ -150,7 +153,7 @@ const registerDomain = async (domainId) => {
   }
 };
 
-const transferDomain = async (domainId, walletAddress) => {
+const transferDomain = async (domainId: string, walletAddress: string) => {
   try {
     const response = await axios.put(
       `${UNSTOPPABLE_SANDBOX_API_URL}/domains/${domainId}`,
@@ -171,7 +174,7 @@ const transferDomain = async (domainId, walletAddress) => {
     );
     console.log('Domain transferred:', response.data);
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     if (error.response) {
       console.error('Server error:', error.response.data);
       return { error: 'Server error', details: error.response.data };
@@ -185,7 +188,7 @@ const transferDomain = async (domainId, walletAddress) => {
   }
 };
 
-const returnDomain = async (domainId) => {
+const returnDomain = async (domainId: string) => {
   try {
     const response = await axios.delete(
       `${UNSTOPPABLE_SANDBOX_API_URL}/domains/${domainId}`,
@@ -198,7 +201,7 @@ const returnDomain = async (domainId) => {
     );
     console.log('Domain returned:', response.data);
     return response.data;
-  } catch (error) {
+  } catch (error: any) {
     if (error.response) {
       console.error('Server error:', error.response.data);
       return { error: 'Server error', details: error.response.data };
@@ -212,7 +215,7 @@ const returnDomain = async (domainId) => {
   }
 };
 
-const verifyIdToken = async (jwks_uri, id_token, nonce, client_id, issuer) => {
+const verifyIdToken = async (jwks_uri: string, id_token: string, nonce: string, client_id: string, issuer: string) => {
   const { payload } = await jwtVerify(
     id_token,
     createRemoteJWKSet(new URL(jwks_uri)),
@@ -230,7 +233,7 @@ const verifyIdToken = async (jwks_uri, id_token, nonce, client_id, issuer) => {
   return idToken;
 };
 
-const verifyLogin = async (authorization, client_id) => {
+const verifyLogin = async (authorization: any, client_id: string) => {
   try {
     const { data } = await axios(
       'https://auth.unstoppabledomains.com/.well-known/openid-configuration'
@@ -248,14 +251,14 @@ const verifyLogin = async (authorization, client_id) => {
     const verifyIdTokenSub = verifyIdTokenResponse.sub;
 
     if (verifyIdTokenSub !== authorization.idToken.sub) {
-      console.error('Mismatched Domains:', error.message);
-      return { error: 'Mismatched Domains', details: error.message };
+      console.error('Mismatched Domains');
+      return { valid: false, error: 'Mismatched Domains' };
     } else {
-      return true;
+      return { valid: true, error: null };
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error setting up request:', error.message);
-    return { error: 'Error setting up request', details: error.message };
+    return { valid: false, error: 'Error setting up request', details: error.message };
   }
 }
 
