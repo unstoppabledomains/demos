@@ -26,5 +26,4 @@ export interface Parameters {
     initialRecords: InitialRecords;
 }
 
-export interface InitialRecords {
-}
+export type InitialRecords = object;

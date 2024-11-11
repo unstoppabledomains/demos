@@ -2,6 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const path = require('path');
 const cors = require('cors');
+const { jwtVerify, createRemoteJWKSet } = require('jose');
 require('dotenv').config()
 const app = express();
 
@@ -38,6 +39,21 @@ app.post('/api/register', async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ error: 'Error registering domain', details: error.message });
+  }
+});
+
+app.post('/api/auth/verify', async (req, res) => {
+  const auth = req.body.auth;
+  const clientId = req.body.clientId;
+  try {
+    const verify = await verifyLogin(auth, clientId);
+    if (verify.error) {
+      res.status(500).json(verify);
+    } else {
+      res.json(verify);
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Error verifying login', details: error.message });
   }
 });
 
@@ -195,6 +211,53 @@ const returnDomain = async (domainId) => {
     }
   }
 };
+
+const verifyIdToken = async (jwks_uri, id_token, nonce, client_id, issuer) => {
+  const { payload } = await jwtVerify(
+    id_token,
+    createRemoteJWKSet(new URL(jwks_uri)),
+    { audience: client_id, issuer }
+  );
+
+  const idToken = payload;
+
+  idToken.__raw = id_token;
+
+  if (nonce !== idToken.nonce) {
+    throw new Error('Invalid login credentials!');
+  }
+
+  return idToken;
+};
+
+const verifyLogin = async (authorization, client_id) => {
+  try {
+    const { data } = await axios(
+      'https://auth.unstoppabledomains.com/.well-known/openid-configuration'
+    );
+    const { jwks_uri, issuer } = data;
+
+    const verifyIdTokenResponse = await verifyIdToken(
+      jwks_uri,
+      authorization.idToken.__raw,
+      authorization.idToken.nonce,
+      client_id,
+      issuer
+    );
+
+    const verifyIdTokenSub = verifyIdTokenResponse.sub;
+
+    if (verifyIdTokenSub !== authorization.idToken.sub) {
+      console.error('Mismatched Domains:', error.message);
+      return { error: 'Mismatched Domains', details: error.message };
+    } else {
+      return true;
+    }
+  } catch (error) {
+    console.error('Error setting up request:', error.message);
+    return { error: 'Error setting up request', details: error.message };
+  }
+}
 
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);

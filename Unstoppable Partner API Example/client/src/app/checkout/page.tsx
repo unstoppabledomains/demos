@@ -1,15 +1,14 @@
 "use client";
-import { CartProvider, useCart } from '../context/CartContext';
-import Link from 'next/link';
+import { useCart } from '../context/CartContext';
 import Nav from '../components/NavBar';
 import { useState } from 'react';
-import { transferDomain } from '../api/transferDomain';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '../context/AuthContext';
 
 const Cart = () => {
-  const { cart } = useCart();
+  const { cart, clearCart } = useCart();
+  const { auth } = useAuth();
   const [error, setError] = useState('');
-  const [walletAddress, setWalletAddress] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -23,7 +22,7 @@ const Cart = () => {
         setError('');
         for (const item of cart) {
             try {
-                //await transferDomain(item.name, walletAddress); // Successfull payment
+                //await transferDomain(item.name, auth?.idToken?.wallet_address); // Successfull payment
                 //await returnDomain(item.name); // Unsuccessfull payment
                 await new Promise((resolve) => setTimeout(resolve, 2000));
               } catch (error) {
@@ -32,12 +31,14 @@ const Cart = () => {
                 continue;
               }
         };
+        if (!error) {
+          clearCart();
+        }
     } catch (error) {
       console.error('Error transferring domains:', error);
       setError('An unexpected error occurred. Please try again.');
     }
   };
-
 
   const handleCheckout = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -97,7 +98,7 @@ const Cart = () => {
 
                         <div className="col-span-2 sm:col-span-1">
                         <label htmlFor="card-number-input" className="mb-2 block text-sm font-medium text-gray-900 dark:text-white"> Card number* </label>
-                        <input type="text" id="card-number-input" className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 pe-10 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500  dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500" placeholder="4242424242424242" pattern="[0-9]{12}(?:[0-9]{3})?$" required />
+                        <input type="text" id="card-number-input" className="block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 pe-10 text-sm text-gray-900 focus:border-primary-500 focus:ring-primary-500  dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder:text-gray-400 dark:focus:border-primary-500 dark:focus:ring-primary-500" placeholder="4242424242424242" pattern="^4[0-9]{12}(?:[0-9]{3})?$" required />
                         </div>
 
                         <div>
@@ -155,7 +156,18 @@ const Cart = () => {
             <p className="mt-6 mx-auto text-center text-gray-500 dark:text-gray-400 sm:mt-8 lg:text-left">
                 This is an entirely fake checkout. You will not be charged. Please do not enter any real credit card information.
             </p>
-            </div>
+            { auth && 
+              <p className="mt-3 text-sm font-normal text-gray-500 dark:text-gray-400 text-center mx-auto lg:text-left">
+                Domain will mint to Wallet Address:&nbsp;
+                <span className="gap-2 text-sm font-medium text-[#007bff]">
+                  {auth?.idToken?.sub}&nbsp;
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    ({auth?.idToken?.wallet_address})
+                  </span> 
+                </span>
+              </p>
+            }
+          </div>
         </div>
     </section>
   );

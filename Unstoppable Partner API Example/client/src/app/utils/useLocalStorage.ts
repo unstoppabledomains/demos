@@ -1,11 +1,22 @@
 import { useCallback, useEffect, useState } from 'react';
 
 function useLocalStorage<T>(storageKey: string, fallbackState: T) {
-    const [value, setValue] = useState<T>(fallbackState);
+    //const [value, setValue] = useState<T>(fallbackState);
     const isClient = typeof window !== 'undefined';
 
+    const [value, setValue] = useState<T>(() => {
+        if (isClient) {
+            const storedValue = localStorage.getItem(storageKey);
+            return storedValue ? JSON.parse(storedValue) : fallbackState;
+        }
+        return fallbackState;
+    });
+
     useEffect(() => {
-        setValue(isClient ? JSON.parse(localStorage.getItem(storageKey) || '""') : fallbackState);
+        if (isClient) {
+            const storedValue = localStorage.getItem(storageKey);
+            setValue(storedValue ? JSON.parse(storedValue) : fallbackState);
+        }
     }, [storageKey, isClient]);
 
     useEffect(() => {

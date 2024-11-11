@@ -1,22 +1,18 @@
 "use client";
 import React, { useState } from 'react';
 import { fetchSuggestions } from './api/fetchSuggestions';
-import { claimDomain } from './api/claimDomain';
-import { Suggestions, DomainSuggestion } from '../types/suggestions';
+import { Suggestions } from '../types/suggestions';
 import Nav from './components/NavBar';
 import { useCart } from './context/CartContext';
 
 const Home = () => {
   const [query, setQuery] = useState('');
   const [domains, setDomains] = useState<Suggestions | null>(null);
-  const [selectedDomain, setSelectedDomain] = useState<DomainSuggestion | null>(null);
-  const [walletAddress, setWalletAddress] = useState('');
   const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [loading, setLoading] = useState(false);
+  const { cart, addToCart, removeFromCart } = useCart();
   const domainsPerPage = 5;
-
 
   const searchDomains = async () => {
     try {
@@ -30,9 +26,7 @@ const Home = () => {
       setError('Error fetching domains. Please try again.');
     }
   };
-
-  const { cart, addToCart, removeFromCart } = useCart();
-
+  
   const indexOfLastDomain = currentPage * domainsPerPage;
   const indexOfFirstDomain = indexOfLastDomain - domainsPerPage;
   const currentDomains = domains?.items?.slice(indexOfFirstDomain, indexOfLastDomain);
@@ -52,6 +46,10 @@ const Home = () => {
     }
   }
 
+  if (!Array.isArray(cart)) {
+    return <div>Loading cart...</div>;
+  }
+
   return (
       <div className="w-full h-[100vh] p-[20px] bg-[#1e1e1e] rounded-[8px] overflow-hidden font-inter">
         <Nav />
@@ -67,7 +65,6 @@ const Home = () => {
             </div>
         </form>
         {error && <div className="text-red-500 text-center mb-[20px]">{error}</div>}
-        {successMessage && <div className="text-green-500 text-center mb-[20px]">{successMessage}</div>}
         <div className="flex flex-col items-center">
           {loading &&
             <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

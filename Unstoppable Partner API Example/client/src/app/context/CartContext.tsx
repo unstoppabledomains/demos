@@ -1,14 +1,12 @@
-// contexts/CartContext.tsx
 "use client";
 import { DomainSuggestion } from '@/types/suggestions';
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, ReactNode } from 'react';
 import useLocalStorage from '../utils/useLocalStorage';
-import { Domain } from 'domain';
 
 interface CartContextType {
   cart: DomainSuggestion[];
   addToCart: (item: DomainSuggestion) => void;
-  removeFromCart: (name: String) => void;
+  removeFromCart: (name: string) => void;
   clearCart: () => void;
 }
 
@@ -24,7 +22,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setCart(newCart);
   };
 
-  const removeFromCart = (name: String) => {
+  const removeFromCart = (name: string) => {
     setCart(cart.filter((item: DomainSuggestion) => item.name !== name));
   };
 

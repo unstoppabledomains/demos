@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const transferDomain = async (domain: String, walletAddress: String) => {
+export const transferDomain = async (domain: string, walletAddress: string) => {
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/transfer/${domain}`;
     const res = await axios.post(url, 

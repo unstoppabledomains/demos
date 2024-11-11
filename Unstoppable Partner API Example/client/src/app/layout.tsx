@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { CartProvider } from './context/CartContext';
+import { AuthProvider } from "./context/AuthContext";
 
 export const metadata: Metadata = {
   title: "Unstoppable Domains Partner API Example",
@@ -20,9 +21,11 @@ export default function RootLayout({
       <body
         className={`antialiased`}
       >
-        <CartProvider>
-          {children}
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            {children}
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

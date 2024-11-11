@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-export const returnDomain = async (domain: String) => {
+export const returnDomain = async (domain: string) => {
   try {
     const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/return/${domain}`;
     const res = await axios.delete(url);
