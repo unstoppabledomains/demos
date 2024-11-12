@@ -1,6 +1,11 @@
 export interface Returns {
+    items: Return[];
+}
+
+export interface Return {
     "@type":   string;
     operation: Operation;
+    error?:    object; // Added for error handling, not part of the official API response.
 }
 
 export interface Operation {
@@ -11,6 +16,7 @@ export interface Operation {
     domain:               string;
     lastUpdatedTimestamp: number;
     dependencies:         Dependency[];
+    error?:               object; // Added for error handling, not part of the official API response.
 }
 
 export interface Dependency {

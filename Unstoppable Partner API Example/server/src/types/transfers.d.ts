@@ -1,6 +1,11 @@
 export interface Transfers {
+    items: Transfer[];
+}
+
+export interface Transfer {
     "@type":   string;
     operation: Operation;
+    error?:    object; // Added for error handling, not part of the official API response.
 }
 
 export interface Operation {
@@ -11,6 +16,7 @@ export interface Operation {
     domain:               string;
     lastUpdatedTimestamp: number;
     dependencies:         TransferDependency[];
+    error?:               object; // Added for error handling, not part of the official API response.
 }
 
 export interface TransferDependency {

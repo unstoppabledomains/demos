@@ -2,61 +2,163 @@
 import Link from 'next/link';
 import Nav from '../components/NavBar';
 import { claimDomain } from '../api/claimDomain';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { checkAvailability } from '../api/checkAvailability';
 
 const Cart = () => {
-  const { cart, removeFromCart, clearCart } = useCart();
-  const { auth, authorizing, login } = useAuth();
+  const { cart, removeFromCart, updateCartItemOperation, updateCartItemAvailability, clearCart } = useCart();
+  const { auth, login } = useAuth();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+  const [allAvailable, setAllAvailable] = useState(false);
+  const [availabilityLoading, setAvailabilityLoading] = useState(false);
 
+  // Calculate total price of items in the cart
   let total = 0;
   cart.forEach((item) => {
-    total += item.price.listPrice.usdCents;
+    total += item.suggestion.price.listPrice.usdCents;
   });
 
-  const registerDomain = async () => {
+  /**
+   * Sets client-side flag and periodically checks domain availability in the cart every minute.
+   */
+  useEffect(() => {
+    setIsClient(true);
+    // Periodic check every 60 seconds for domain availability in the cart
+    const interval = setInterval(() => {
+      setAvailabilityLoading(true);
+      checkCartAvailability(); // Check the cart availability on interval
+      setAvailabilityLoading(false);
+    }, 60000);
+
+    return () => clearInterval(interval); // Cleanup on component unmount
+  }, []);
+
+  /**
+   * Checks the availability of all domains in the cart.
+   * It updates the cart items' availability status based on the API response.
+   *
+   * @returns {Promise<boolean>} - Returns a boolean indicating if all items in the cart are available.
+   */
+  const checkCartAvailability = async (): Promise<boolean> => {
     try {
-        setError('');
-        for (const item of cart) {
-          try {
-            //await claimDomain(item);
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-          } catch (error) {
-            console.error(`Error registering ${item.name}:`, error);
-            setError(`An unexpected error occurred while claiming ${item.name}.`);
-            continue;
+      setError('');
+      const domains: string[] = cart.map(item => item.suggestion.name); // Collect domain names from the cart
+      if (domains.length > 0) {
+        interface Status {
+          name: string;
+          available: boolean;
+        }
+        const statuses: Status[] = [];
+        // Call external availability check function
+        const availability = await checkAvailability(domains);
+        // Update each cart item’s availability based on the API response
+        for (const item of availability?.items!) {
+          const cartItem = cart.find((cartItem) => cartItem.suggestion.name === item.name);
+          if (cartItem) {
+            if (item.availability.status === "AVAILABLE") {
+              updateCartItemAvailability(item.name, true)
+              statuses.push({ name: item.name, available: true })
+            } else {
+              updateCartItemAvailability(item.name, false)
+              statuses.push({ name: item.name, available: false })
+            }
           }
-        };
+        }
+        // Check if all cart items are available
+        setAllAvailable(cart.every(item => item.available ?? false));
+        // Return true if all items are available, otherwise false
+        return statuses.every(item => item.available ?? false);
+      }
+      return false; // Return false if there are no items in the cart
     } catch (error) {
-      console.error('Error registering domains:', error);
+      console.log('Error checking domain availability:', error);
       setError('An unexpected error occurred. Please try again.');
+      return false;
     }
   };
 
+  /**
+   * Registers the domains in the cart by first checking their availability and then attempting to claim each domain.
+   * If any domain is unavailable or an error occurs during the registration, an error message is displayed.
+   *
+   * @returns {Promise<boolean>} - Returns a boolean indicating if the domain registration was successful.
+   */
+  const registerDomain = async (): Promise<boolean> => {
+    try {
+        setError('');
+        setAvailabilityLoading(true);
+        const available = await checkCartAvailability(); // Check availability of all domains in the cart
+        setAvailabilityLoading(false);
+        // Display error message if any domain is unavailable
+        if (!available) {
+          setError('One or more items in your cart are no longer available. Please remove them before proceeding.');
+          return false;
+        }
+        // Attempt to claim each domain in the cart
+        for (const item of cart) {
+          try {
+            const claim = await claimDomain(item.suggestion); // Attempt to claim the domain
+            updateCartItemOperation(item.suggestion.name, claim?.operation.id!); // Update operation ID for the item based on claim response
+          } catch (error) {
+            console.log(`Error registering ${item.suggestion.name}:`, error);
+            setError(`An unexpected error occurred while claiming ${item.suggestion.name}.`);
+            return false;
+          }
+        };
+        return true; // Return true if all domains are successfully claimed
+    } catch (error) {
+      console.log('Error registering domains:', error);
+      setError('An unexpected error occurred. Please try again.');
+      return false;
+    }
+  };
+
+  /**
+   * Handles the form submission for checkout. It triggers the checkout process
+   * and navigates to the checkout page upon success.
+   * 
+   * @param {React.FormEvent<HTMLFormElement>} event - The form submission event.
+   */
   const handleCheckout = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoading(true);
+    let success = false;
     try {
-      await registerDomain();
+      success = await registerDomain();
     } catch (error) {
-      console.error("Error:", error);
+      console.log("Error:", error);
     } finally {
       setLoading(false);
-      router.push('/checkout');
+      if (success) {
+        router.push('/checkout');
+      }
     }
   }
 
+  /**
+   * Initiates the login process for wallet connection.
+   */
   const connectWallet = () => {
     try {
       login();
     } catch (error) {
       console.error("Error:", error);
     }
+  }
+
+  // Early return to avoid server-side rendering issues
+  if (!isClient) {
+    return (
+      <section className="w-full h-[100vh] p-[20px] bg-[#1e1e1e] rounded-[8px] font-inter">
+        <Nav />
+      </section>
+  );
   }
 
   return (
@@ -101,7 +203,7 @@ const Cart = () => {
             ) : (
               <div>
                 {cart.map((item) => (
-                  <div key={item.name} className="mx-auto w-full flex-none lg:max-w-2xl xl:max-w-4xl pb-5">
+                  <div key={item.suggestion.name} className="mx-auto w-full flex-none lg:max-w-2xl xl:max-w-4xl pb-5">
                     <div className="space-y-6">
                       <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:p-6">
                         <div className="space-y-4 md:flex md:items-center md:justify-between md:gap-6 md:space-y-0">
@@ -110,15 +212,22 @@ const Cart = () => {
                           </svg>
                           <div className="flex items-center justify-between md:order-3 md:justify-end">
                             <div className="text-end md:order-4 md:w-32">
-                              <p className="text-base font-bold text-gray-900 dark:text-white">${(item.price.listPrice.usdCents / 100).toFixed(2)} USD</p>
+                              <p className="text-base font-bold text-gray-900 dark:text-white">${(item.suggestion.price.listPrice.usdCents / 100).toFixed(2)} USD</p>
                             </div>
                           </div>
         
-                          <div className="w-full min-w-0 flex-1 space-y-4 md:order-2 md:max-w-md">
-                            <span className="text-base font-medium text-gray-900 dark:text-white">{item.name}</span>
-        
+                          <div className="flex flex-col w-full min-w-0 flex-1 space-y-4 md:order-2 md:max-w-md">
+                            <span className="text-base font-medium text-gray-900 dark:text-white">{item.suggestion.name}</span>
+                            {availabilityLoading &&
+                              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                            }
+                            {!availabilityLoading && !item.available && <span className="text-xs font-medium text-red-600 dark:text-red-500">Domain is no longer available</span>}
+                            {!availabilityLoading && item.available && <span className="text-xs font-medium text-green-600 dark:text-green-500">Domain is available</span>}
                             <div className="flex items-center gap-4">
-                              <button type="button" className="inline-flex items-center text-sm font-medium text-red-600 hover:underline dark:text-red-500" onClick={() => removeFromCart(item.name)}>
+                              <button type="button" className="inline-flex items-center text-sm font-medium text-red-600 hover:underline dark:text-red-500" onClick={() => removeFromCart(item.suggestion.name)}>
                                 <svg className="me-1.5 h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                                   <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18 17.94 6M18 18 6.06 6" />
                                 </svg>
@@ -163,7 +272,7 @@ const Cart = () => {
                   </div>
 
                   <form onSubmit={handleCheckout}>
-                  { auth ? 
+                  { (auth && allAvailable) ? 
                     <button type="submit" className="flex mx-auto w-[50%] md:w-[40%] items-center justify-center rounded-lg bg-[#007bff] px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
                       {loading &&
                         <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

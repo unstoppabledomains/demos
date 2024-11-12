@@ -1,10 +1,13 @@
 export interface Orders {
-    orders: Order[];
+    items: Order[];
 }
 
 export interface Order {
     "@type":   string;
     operation: Operation;
+    error?:     object; // Added for error handling, not part of the official API response.
+    payment?:   boolean; // Added for checkout logic, not part of the official API response.
+    walletAddress?: string; // Added for checkout logic, not part of the official API response.
 }
 
 export interface Operation {
@@ -15,6 +18,7 @@ export interface Operation {
     domain:               string;
     lastUpdatedTimestamp: number;
     dependencies:         OrderDependency[];
+    error?:               object; // Added for error handling, not part of the official API response.
 }
 
 export interface OrderDependency {

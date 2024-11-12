@@ -5,6 +5,12 @@ import { Suggestions } from '../types/suggestions';
 import Nav from './components/NavBar';
 import { useCart } from './context/CartContext';
 
+/**
+ * Home component for displaying domain search functionality and managing the cart.
+ * Allows users to search for domains, view paginated search results, and add/remove items to/from the cart.
+ * 
+ * @component
+ */
 const Home = () => {
   const [query, setQuery] = useState('');
   const [domains, setDomains] = useState<Suggestions | null>(null);
@@ -14,11 +20,14 @@ const Home = () => {
   const { cart, addToCart, removeFromCart } = useCart();
   const domainsPerPage = 5;
 
+  /**
+   * Fetches domain suggestions based on the current search query.
+   * Updates the `domains` state with the response or sets an error message if the fetch fails.
+   */
   const searchDomains = async () => {
     try {
       const response = await fetchSuggestions(query);
-      console.log(response)
-      setDomains(response?.data);
+      setDomains(response!);
       setError('');
       setCurrentPage(1);
     } catch (error) {
@@ -27,33 +36,49 @@ const Home = () => {
     }
   };
   
+  // Calculate indexes for pagination based on current page
   const indexOfLastDomain = currentPage * domainsPerPage;
   const indexOfFirstDomain = indexOfLastDomain - domainsPerPage;
   const currentDomains = domains?.items?.slice(indexOfFirstDomain, indexOfLastDomain);
 
+  /**
+   * Sets the current page for pagination.
+   * @param {number} pageNumber - The page number to navigate to.
+   */
   const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
+  /**
+   * Handles form submission for domain search.
+   * Validates user input, resets domain state, and initiates domain search.
+   * 
+   * @param {React.FormEvent<HTMLFormElement>} event - The form submit event.
+   */
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const inputElement = document.getElementById("search") as HTMLInputElement;
+    const inputValue = inputElement.value;
+    const isValid = /^[a-zA-Z0-9]([a-zA-Z0-9-]{0,22}[a-zA-Z0-9])?$/.test(inputValue);
+    
+    if (!isValid) {
+      setDomains(null);
+      setError('Must be 1-24 characters in length, Contain only letters, numbers, or hyphens, and cannot start or end with a hyphen.');
+      return;
+    }
     setLoading(true);
     try {
-      setDomains(null);
-      await searchDomains();
+      setDomains(null); // Clear previous results
+      await searchDomains(); // Fetch new search results
     } catch (error) {
       console.error("Error:", error);
     } finally {
-      setLoading(false);
+      setLoading(false); // Reset loading state
     }
-  }
-
-  if (!Array.isArray(cart)) {
-    return <div>Loading cart...</div>;
   }
 
   return (
       <div className="w-full h-[100vh] p-[20px] bg-[#1e1e1e] rounded-[8px] overflow-hidden font-inter">
         <Nav />
-        <form className="max-w-md mx-auto min-w-[400px] pt-[40px] pb-[30px]" onSubmit={handleSubmit}>   
+        <form className="max-w-md mx-auto min-w-[400px] pt-[40px] pb-[30px]" onSubmit={(e: React.FormEvent<HTMLFormElement>) => {handleSubmit(e)}}>   
             <div className="relative text-[1.2em] block w-full bg-[#333] rounded-[8px]">
                 <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none ">
                     <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
@@ -63,6 +88,7 @@ const Home = () => {
                 <input type="search" id="search" className="block w-full p-4 ps-10 bg-[#333] placeholder-gray-400 text-white rounded-[8px]" placeholder="Search for your new domain" onChange={(e) => setQuery(e.target.value)} required />
                 <button type="submit" className="text-white absolute end-2.5 bottom-2.5 bg-[#007bff] hover:bg-[#0056b3] font-medium px-4 py-2 rounded-[4px]">Search</button>
             </div>
+            <span className='flex text-gray-500 text-center justify-center mt-2'>Must be 1-24 characters in length, Contain only letters, numbers, or hyphens, and cannot start or end with a hyphen.</span>
         </form>
         {error && <div className="text-red-500 text-center mb-[20px]">{error}</div>}
         <div className="flex flex-col items-center">
@@ -78,7 +104,7 @@ const Home = () => {
                 <p className="text-[1.2em] text-white">{domain.name}</p>
                 <p className="text-[#bbb]">${(domain.price.listPrice.usdCents / 100).toFixed(2)} USD</p>
               </div>
-              {cart.some(cartItem => cartItem.name === domain.name)
+              {cart.some(cartItem => cartItem.suggestion.name === domain.name)
                 ? <button onClick={() => removeFromCart(domain.name)} className="text-[#49a668] text-[1.2em] bg-[#edf7f4] font-medium px-4 py-2 rounded-[4px]">Added</button>
                 : <button onClick={() => addToCart(domain)} className="text-white text-[1.2em] bg-[#007bff] hover:bg-[#0056b3] font-medium px-4 py-2 rounded-[4px]">Add to Cart</button>
               }
@@ -100,6 +126,14 @@ interface PaginationProps {
   paginate: (pageNumber: number) => void;
 }
 
+/**
+ * Pagination component to render page numbers for navigating through domain results.
+ *
+ * @param {number} domainsPerPage - Number of domains displayed per page.
+ * @param {number} totalDomains - Total number of domain results.
+ * @param {function} paginate - Callback function to change the page number.
+ * @returns {JSX.Element} Pagination buttons for navigation.
+ */
 const Pagination: React.FC<PaginationProps> = ({ domainsPerPage, totalDomains, paginate }) => {
   const pageNumbers = [];
 
