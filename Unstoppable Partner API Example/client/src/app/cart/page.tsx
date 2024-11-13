@@ -33,6 +33,8 @@ const Cart = () => {
     cart.forEach((item) => {
       updateCartItemOperation(item.suggestion.name, '');
     });
+    // Check if all cart items are available on load
+    setAllAvailable(cart.every(item => item.available ?? false));
     // Periodic check every 60 seconds for domain availability in the cart
     const interval = setInterval(() => {
       setAvailabilityLoading(true);
