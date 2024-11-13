@@ -13,7 +13,7 @@ Run the following command to install all dependencies for both the server and th
 
 ### 3. Request and Add Your Sandbox API Key
 Go to the [Partner Dashboard](https://dashboard.auth.unstoppabledomains.com/auth), sign up, create a Sandbox client and request a Sandbox API key.
-Add your Sandbox API key to the `.env` file in the `server` directory. Use `server/.env.example` to create your `server/.env` file.
+Add your Sandbox API key to the `.env` file in the `server` directory. Use `server/.env.example` to create your `server/.env` file. Here is a [full guiide](https://docs.unstoppabledomains.com/domain-distribution-and-management/quickstart/retrieve-an-api-key/) for retireving your Sandbox API key.
 
 #### For example:
 in `server/.env`
@@ -21,7 +21,7 @@ in `server/.env`
 
 ### 4. Add Your Login Client Credentials
 Go to the [Partner Dashboard](https://dashboard.auth.unstoppabledomains.com/auth), sign up, create a client and rnavigate to the `Login` tab.
-Add your Client Metadata to the `.env` file in the `client` directory. Use `client/.env.example` to create your `client/.env` file.
+Add your Client Metadata to the `.env` file in the `client` directory. Use `client/.env.example` to create your `client/.env` file. Here is a [full guide](https://docs.unstoppabledomains.com/identity/quickstart/retrieve-client-credentials/) to retrieving your Client Metadata.
 
 #### For example:
 in `client/.env`
