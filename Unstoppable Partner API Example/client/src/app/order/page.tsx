@@ -21,10 +21,12 @@ const Order = () => {
   const [isClient, setIsClient] = useState(false);
 
   /**
-   * Redirects the user to the cart page if the cart is empty or the user is not authenticated.
+   * Redirects the user to the cart page if the cart is empty, invalid, or the user is not authenticated.
    */
   useEffect(() => {
     if (cart.length === 0 || !auth) {
+      router.push('/cart');
+    } else if (cart.some(item => item.operationId === '')) {
       router.push('/cart');
     }
   }, [cart, auth, router]);

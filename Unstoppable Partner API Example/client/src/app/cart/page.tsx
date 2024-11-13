@@ -29,6 +29,10 @@ const Cart = () => {
    */
   useEffect(() => {
     setIsClient(true);
+    // Reset cart oparationId on load
+    cart.forEach((item) => {
+      updateCartItemOperation(item.suggestion.name, '');
+    });
     // Periodic check every 60 seconds for domain availability in the cart
     const interval = setInterval(() => {
       setAvailabilityLoading(true);
