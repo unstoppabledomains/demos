@@ -64,18 +64,21 @@ const Cart = () => {
         // Call external availability check function
         const availability = await checkAvailability(domains);
         // Update each cart item’s availability based on the API response
-        for (const item of availability?.items!) {
-          const cartItem = cart.find((cartItem) => cartItem.suggestion.name === item.name);
-          if (cartItem) {
-            if (item.availability.status === "AVAILABLE") {
-              updateCartItemAvailability(item.name, true)
-              statuses.push({ name: item.name, available: true })
-            } else {
-              updateCartItemAvailability(item.name, false)
-              statuses.push({ name: item.name, available: false })
+        if (availability?.items) {
+          for (const item of availability?.items) {
+            const cartItem = cart.find((cartItem) => cartItem.suggestion.name === item.name);
+            if (cartItem) {
+              if (item.availability.status === "AVAILABLE") {
+                updateCartItemAvailability(item.name, true)
+                statuses.push({ name: item.name, available: true })
+              } else {
+                updateCartItemAvailability(item.name, false)
+                statuses.push({ name: item.name, available: false })
+              }
             }
           }
         }
+        // Handle error when item availability is missing
         // Check if all cart items are available
         setAllAvailable(cart.every(item => item.available ?? false));
         // Return true if all items are available, otherwise false
@@ -110,7 +113,10 @@ const Cart = () => {
         for (const item of cart) {
           try {
             const claim = await claimDomain(item.suggestion); // Attempt to claim the domain
-            updateCartItemOperation(item.suggestion.name, claim?.operation.id!); // Update operation ID for the item based on claim response
+            if (claim?.operation?.id) {
+              updateCartItemOperation(item.suggestion.name, claim?.operation.id); // Update operation ID for the item based on claim response
+            }
+            // Handle any errors when ID is missing
           } catch (error) {
             console.log(`Error registering ${item.suggestion.name}:`, error);
             setError(`An unexpected error occurred while claiming ${item.suggestion.name}.`);

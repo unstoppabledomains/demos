@@ -1,7 +1,7 @@
 export interface Verify { 
     valid: boolean; 
     error: string; 
-    details: any; 
+    details: string; 
 }
 
 export interface Authorization {
@@ -91,5 +91,5 @@ export interface JWTClaims {
 
 export interface IdToken extends UserInfo, Partial<JWTClaims> {
     __raw: string;
-    [key: string]: any;
+    [key: string]: string;
 }

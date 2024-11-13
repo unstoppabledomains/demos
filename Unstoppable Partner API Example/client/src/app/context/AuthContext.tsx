@@ -49,12 +49,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
         setAuthorizing(true);
         const authorization = await uauth.loginWithPopup();
-        console.log(authorization)
         const verification = await verifyLogin(authorization, process.env.NEXT_PUBLIC_CLIENT_ID!)
-        console.log(verification)
         if (verification?.valid) {
-          authorization ? setAuth(authorization) : setAuth(null);
-          
+          setAuth(authorization || null);
         }
     } catch (error) {
         setAuth(null);

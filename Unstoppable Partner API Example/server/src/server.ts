@@ -69,6 +69,41 @@ const initDB = async () => {
 // Initialize the databases on server start
 initDB().catch((error) => console.error('Error initializing DB:', error));
 
+/**
+ * Initializes tracking for any pending operations in the order, transfer, and return databases.
+ * Loads the database data and identifies entries where the `operation.status` is not 'COMPLETED'.
+ * For each pending operation, it triggers tracking functions to monitor ongoing processes.
+ *
+ * @async
+ * @function initializeTracking
+ * @returns {Promise<void>} - Resolves once all pending operations have been re-tracked.
+ */
+const initializeTracking = async (): Promise<void> => {
+  // Load databases
+  await orderDB.read();
+  await transferDB.read();
+  await returnDB.read();
+
+  // Function to check and track pending operations
+  const checkAndTrackPendingOperations = async (db: Low<any>) => {
+    // Update according to the appropriate status of the operation
+    const pendingItems = db.data?.items?.filter((item: any) => item.operation.status !== 'COMPLETED' && item.operation.status !== 'FAILED') || [];
+    for (const item of pendingItems) {
+      await trackOperation(item.operation.id, db);
+      await trackCheckout(item.operation.id);
+    }
+  };
+
+  // Check and track pending operations in each database
+  await checkAndTrackPendingOperations(orderDB);
+  await checkAndTrackPendingOperations(transferDB);
+  await checkAndTrackPendingOperations(returnDB);
+  console.log('Pending operations re-tracked');
+}
+
+// Call initializeTracking when server starts
+initializeTracking().catch((error) => console.error('Error initializing tracking:', error));
+
 // Middleware setup
 app.use(express.json()); // For parsing JSON request bodies
 app.use(cors()); // Enable Cross-Origin Resource Sharing
@@ -611,6 +646,11 @@ const trackOperation = async (operationId: string, db: Low<any>) => {
       if (operation.status != status) {
         await updateOperation(operation, db);
         if (operation.status === "COMPLETED") {
+          // Handle completed operation
+          clearInterval(interval);
+        }
+        if (operation.status === "FAILED") {
+          // Handle failed operation
           clearInterval(interval);
         }
         // You would want to ensure you're handling other status cases here
@@ -639,8 +679,10 @@ const trackCheckout = async (operationId: string) => {
           const domainTransfer = await transferDomain(order.operation.domain, order.walletAddress);
           if (domainTransfer.error) {
             console.log('Error transferring domain:', domainTransfer.error);
+            // Handle failed init transfer
           } else {
             console.log('Domain transferred:', domainTransfer);
+            // Handle successful init transfer
             clearInterval(interval);
             await transferDB.update(({ items }) => items.push(domainTransfer));
             trackOperation(domainTransfer.operation.id, transferDB);
@@ -654,8 +696,10 @@ const trackCheckout = async (operationId: string) => {
           const domainReturn = await returnDomain(order.operation.domain);
           if (domainReturn.error) {
             console.log('Error returning domain:', domainReturn.error);
+            // Handle failed init return
           } else {
             console.log('Domain returned:', domainReturn);
+            // Handle successful init return
             clearInterval(interval);
             await returnDB.update(({ items }) => items.push(domainReturn));
             trackOperation(domainReturn.operation.id, returnDB);

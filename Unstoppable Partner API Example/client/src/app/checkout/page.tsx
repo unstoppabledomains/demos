@@ -16,7 +16,7 @@ import useLocalStorage from '../utils/useLocalStorage';
  * @component
  */
 const Checkout = () => {
-  const { cart, clearCart } = useCart();
+  const { cart } = useCart();
   const { auth } = useAuth();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -115,7 +115,10 @@ const Checkout = () => {
       setError('');
       for (const item of cart) {
         try {
-            await initCheckout(item.suggestion.name, auth?.idToken.wallet_address!, true, item.operationId!);
+            if (auth?.idToken.wallet_address && item.operationId) {
+              await initCheckout(item.suggestion.name, auth?.idToken.wallet_address, true, item.operationId);
+            }
+            // Handle any errors when wallet_address and operation ID are missing
           } catch (error) {
             console.error(`Error processing ${item.suggestion.name}:`, error);
             setError(`An unexpected error occurred while processing ${item.suggestion.name}.`);
