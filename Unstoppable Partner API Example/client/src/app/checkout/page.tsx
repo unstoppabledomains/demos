@@ -59,13 +59,14 @@ const Checkout = () => {
       // If no start time, initialize the countdown
       setStartTime(currentTime);
       setTimeLeft(countdownTime);
+      setExpired(false);
     }
     /**
      * Interval to update the countdown timer every second.
      */
     const interval = setInterval(() => {
       setTimeLeft((prevTime) => {
-        if (prevTime <= 1) {
+        if (prevTime <= 0) {
           clearInterval(interval);
           setExpired(true);
           setStartTime(null);
@@ -121,7 +122,6 @@ const Checkout = () => {
             return false; // If an error occurs for a domain, return false to halt checkout
           }
       };
-      clearCart(); // Clear the cart after successful checkout
       return true; // Return true if all domains are successfully processed
     } catch (error) {
       console.error('Error processing domains:', error);
