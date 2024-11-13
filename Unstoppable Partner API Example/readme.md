@@ -13,14 +13,22 @@ Run the following command to install all dependencies for both the server and th
 
 ### 3. Request and Add Your Sandbox API Key
 Go to the [Partner Dashboard](https://dashboard.auth.unstoppabledomains.com/auth), sign up, create a Sandbox client and request a Sandbox API key.
-Add your Sandbox API key to the `.env` file in the `server` directory. Use `.env.example` to create your `.env` file.
+Add your Sandbox API key to the `.env` file in the `server` directory. Use `server/.env.example` to create your `server/.env` file.
 
 #### For example:
 in `server/.env`
 `API_KEY_VALUE = 'PUT YOUR SANDBOX API KEY HERE';`
 
-### 4. Start the Project
-Run the following command to start both the server and the client concurrently:
+### 4. Add Your Login Client Credentials
+Go to the [Partner Dashboard](https://dashboard.auth.unstoppabledomains.com/auth), sign up, create a client and rnavigate to the `Login` tab.
+Add your Client Metadata to the `.env` file in the `client` directory. Use `client/.env.example` to create your `client/.env` file.
+
+#### For example:
+in `client/.env`
+`NEXT_PUBLIC_CLIENT_ID = 'PUT YOUR CLIENT ID HERE';`
+
+### 5. Start the Project
+Run the following command from the `Unstoppable Domains Partner API Example` directory to start both the server and the client concurrently:
 `npm run start`
 This will start the Node.js server on port 3001 and the React client on port 3000.
 
@@ -38,7 +46,7 @@ This will start the Node.js server on port 3001 and the React client on port 300
 #### Start the Server Only
 `npm run start:server`
 
-### 5. Access the Application
+### 6. Access the Application
 The client will deploy to
 `http://localhost:3000`
 You should see the Unstoppable Domains Partner API example application running.
