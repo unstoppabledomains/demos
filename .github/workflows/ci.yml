@@ -23,7 +23,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
 
       - name: Install root dependencies
         working-directory: ./Unstoppable Partner API Example
@@ -83,7 +82,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Run npm audit
         working-directory: ./Unstoppable Partner API Example
