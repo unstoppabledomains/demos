@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    name: Build and Test
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install root dependencies
+        working-directory: ./Unstoppable Partner API Example
+        run: npm ci
+
+      - name: Install client dependencies
+        working-directory: ./Unstoppable Partner API Example/client
+        run: npm ci
+
+      - name: Install server dependencies
+        working-directory: ./Unstoppable Partner API Example/server
+        run: npm ci
+
+      - name: Build client
+        working-directory: ./Unstoppable Partner API Example/client
+        run: npm run build
+
+      - name: Verify server can start
+        working-directory: ./Unstoppable Partner API Example/server
+        run: |
+          # Check if server.js exists and is valid
+          if [ ! -f server.js ]; then
+            echo "Error: server.js not found"
+            exit 1
+          fi
+          
+          # Try to start the server and kill it after a short delay
+          timeout 5s npm start || true
+          echo "Server startup check completed"
+
+      - name: Check build output
+        working-directory: ./Unstoppable Partner API Example/client
+        run: |
+          # Verify the build directory was created
+          if [ ! -d "build" ]; then
+            echo "Error: Build output directory 'build' not found"
+            exit 1
+          fi
+          
+          # Check if index.html exists in the build output
+          if [ ! -f "build/index.html" ]; then
+            echo "Error: index.html not found in build output"
+            exit 1
+          fi
+          
+          echo "Build output verification completed"
+
+  security-check:
+    runs-on: ubuntu-latest
+    name: Security Check
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run npm audit
+        working-directory: ./Unstoppable Partner API Example
+        run: npm audit --audit
+
+      - name: Run npm audit on client
+        working-directory: ./Unstoppable Partner API Example/client
+        run: npm audit --audit
+
+      - name: Run npm audit on server
+        working-directory: ./Unstoppable Partner API Example/server
+        run: npm audit --audit

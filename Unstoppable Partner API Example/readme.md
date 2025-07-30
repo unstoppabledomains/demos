@@ -40,5 +40,5 @@ This will start the Node.js server on port 3001 and the React client on port 300
 
 ### 5. Access the Application
 The client will deploy to
-`http://localhost:3000`
+`http://localhost:5173`
 You should see the Unstoppable Domains Partner API example application running.

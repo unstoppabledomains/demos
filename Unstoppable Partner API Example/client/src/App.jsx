@@ -11,7 +11,7 @@ const App = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const domainsPerPage = 5;
-  const PORT = process.env.API_PORT || 3001
+  const PORT = import.meta.env.VITE_API_PORT || 3001
 
   const searchDomains = async () => {
     try {
